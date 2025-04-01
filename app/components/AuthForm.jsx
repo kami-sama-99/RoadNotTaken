@@ -11,6 +11,8 @@ import {
 import { auth } from "@/firebase/firebase";
 import { useState, useRef, useEffect } from "react";
 import { FaGoogle } from "react-icons/fa";
+import { Link } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function AuthForm({ mode }) {
   const email = useRef();
@@ -20,6 +22,7 @@ export default function AuthForm({ mode }) {
   const [info, setInfo] = useState("");
   const [isMobile, setIsMobile] = useState(false);
   const [redirecting, setRedirecting] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const handleResize = () => {
@@ -65,6 +68,7 @@ export default function AuthForm({ mode }) {
           await signOut(auth);
         } else {
             alert("Successful sign in")
+            router.push('/');
         }
       }
     } catch (error) {
@@ -76,7 +80,9 @@ export default function AuthForm({ mode }) {
     try {
       const provider = new GoogleAuthProvider();
       await signInWithPopup(auth, provider);
-      alert("Successful sign in")
+      alert("Successful sign in");
+      router.push('/');
+      
     } catch (error) {
       setError(error.message);
     }
