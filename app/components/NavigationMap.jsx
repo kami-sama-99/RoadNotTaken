@@ -1,9 +1,12 @@
-"use client";
 import { useEffect, useRef, useState } from "react";
+import { decodePolyline } from "@/utils/polyline";
+import { calculateOverlapLength, calculateRouteScore, renderRoutes } from "@/utils/mapUtils";
+import { fetchAllRoutesFromFirestore } from "@/firebase/routes";
 
 const NavigationMap = ({ start, end }) => {
   const mapRef = useRef(null);
   const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
+  const [firestoreRoutes, setFirestoreRoutes] = useState([]);
 
   // Load Google Maps script dynamically
   useEffect(() => {
@@ -20,7 +23,16 @@ const NavigationMap = ({ start, end }) => {
   }, []);
 
   useEffect(() => {
-    if (!isGoogleMapsLoaded || !start || !end) return;
+    if (isGoogleMapsLoaded && start && end) {
+      // Fetch the polycoded routes from Firestore
+      fetchAllRoutesFromFirestore().then((routes) => {
+        setFirestoreRoutes(routes.map(decodePolyline));
+      });
+    }
+  }, [isGoogleMapsLoaded, start, end]);
+
+  useEffect(() => {
+    if (!isGoogleMapsLoaded || !start || !end || firestoreRoutes.length === 0) return;
 
     const map = new google.maps.Map(mapRef.current, {
       zoom: 14,
@@ -29,9 +41,6 @@ const NavigationMap = ({ start, end }) => {
 
     const directionsService = new google.maps.DirectionsService();
     
-    // Create multiple renderers for different routes
-    const routeRenderers = [];
-
     const calculateAndDisplayRoute = () => {
       directionsService.route(
         {
@@ -45,17 +54,17 @@ const NavigationMap = ({ start, end }) => {
             const limitedRoutes = response.routes.slice(0, 5); // Limit to 5 routes
 
             limitedRoutes.forEach((route, index) => {
-              const directionsRenderer = new google.maps.DirectionsRenderer({
-                map,
-                directions: response,
-                routeIndex: index, // Display different routes
-                polylineOptions: {
-                  strokeColor: index === 0 ? "#1976D2" : "#FF5722", // Different colors for routes
-                  strokeOpacity: 0.7,
-                  strokeWeight: 5,
-                },
+              // Decode the Google Maps polyline
+              const googleRoute = decodePolyline(route.overview_polyline.points);
+
+              // Check overlap with Firestore routes
+              firestoreRoutes.forEach((firestoreRoute) => {
+                const overlapLength = calculateOverlapLength(googleRoute, firestoreRoute);
+                const routeScore = calculateRouteScore(route, overlapLength, route.legs[0].duration);
+
+                // Render the best route on the map
+                renderRoutes(map, response, googleRoute, routeScore);
               });
-              routeRenderers.push(directionsRenderer);
             });
           } else {
             alert("Directions request failed due to " + status);
@@ -65,7 +74,7 @@ const NavigationMap = ({ start, end }) => {
     };
 
     calculateAndDisplayRoute();
-  }, [start, end, isGoogleMapsLoaded]);
+  }, [isGoogleMapsLoaded, start, end, firestoreRoutes]);
 
   return (
     <div className="md:col-span-2 mt-4 md:mt-0 rounded-lg shadow-md overflow-hidden h-fit w-full">

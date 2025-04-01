@@ -165,7 +165,7 @@ export default function Page() {
         </div>
 
         {/* Render NavigationMap only after clicking "Navigate" and if no error */}
-        {navigateClicked && !errorMessage && <NavigationMap start={start} end={end} />}
+        {navigateClicked && !errorMessage && <NavigationMap start={start} end={end}/>}
       </div>
     </>
   );
