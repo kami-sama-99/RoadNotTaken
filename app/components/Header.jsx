@@ -1,13 +1,19 @@
+"use client"
+
 import { useState, useEffect } from "react";
-import { Menu, MapPin, X } from "lucide-react";
+import { Menu, MapPin, X, User, LogOut } from "lucide-react";
 import React from "react";
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext"; // Assuming you're using an AuthContext
+import { signOut } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
   const { user } = useAuth(); // Get user authentication status
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false); // Profile dropdown state
   const [isMobile, setIsMobile] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     const checkIfMobile = () => {
@@ -30,13 +36,34 @@ export default function Header() {
     setIsMenuOpen(!isMenuOpen);
   };
 
+  const toggleProfileDropdown = () => {
+    setIsProfileDropdownOpen(!isProfileDropdownOpen);
+  };
+
+  const handleLogout = async () => {
+    try {
+      // Make a POST request to your API route to log out
+      const response = await fetch("/api/auth/logout", {
+        method: "POST", // Ensure you are sending a POST request
+      });
+  
+      if (response.ok) {
+        // After successful logout, redirect to sign-in page
+        router.push("/signin");
+      } else {
+        console.error("Error logging out");
+      }
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+  };
+
   const menuItems = user
     ? [
         { name: "Home", href: "/" },
         { name: "Report", href: "/report" },
         { name: "Navigate", href: "navigate" },
         { name: "View map", href: "/map" },
-        { name: "Profile", href: "/profile" },
       ]
     : [{ name: "Sign in", href: "/signin" }];
 
@@ -59,6 +86,37 @@ export default function Header() {
               {item.name}
             </Link>
           ))}
+
+          {/* Profile Dropdown */}
+          {user && (
+            <div className="relative">
+              <button
+                onClick={toggleProfileDropdown}
+                className="flex items-center space-x-2 text-gray-700 hover:text-blue-500"
+              >
+                <User className="h-5 w-5" />
+                <span>{user.displayName || "Profile"}</span>
+              </button>
+              {isProfileDropdownOpen && (
+                <div className="absolute right-0 z-10 mt-2 bg-white shadow-md rounded-md w-40">
+                  <Link
+                    href="/profile"
+                    className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+                    onClick={() => setIsProfileDropdownOpen(false)}
+                  >
+                    View Profile
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                  >
+                    <LogOut className="inline mr-2" />
+                    Log out
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </nav>
 
         {/* Mobile Menu Button */}
@@ -101,6 +159,35 @@ export default function Header() {
                 {item.name}
               </Link>
             ))}
+            {user && (
+              <div className="space-y-2 mt-4">
+                <button
+                  onClick={toggleProfileDropdown}
+                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-500 w-full"
+                >
+                  <User className="h-5 w-5" />
+                  <span>{user.displayName || "Profile"}</span>
+                </button>
+                {isProfileDropdownOpen && (
+                  <div className="ml-8 space-y-2">
+                    <Link
+                      href="/profile"
+                      className="block text-gray-700 hover:text-blue-500"
+                      onClick={() => setIsProfileDropdownOpen(false)}
+                    >
+                      View Profile
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="block text-gray-700 hover:text-blue-500"
+                    >
+                      <LogOut className="inline mr-2" />
+                      Log out
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </nav>
         </div>
       </div>

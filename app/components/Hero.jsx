@@ -1,8 +1,17 @@
+"use client"
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import React from "react";
+import { getAuth } from "firebase/auth";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Hero() {
+
+  const router = useRouter();
+  const { user } = useAuth();
+
   // Typewriter Component
   function Typewriter() {
     const phrases = [
@@ -63,6 +72,17 @@ export default function Hero() {
 
     return <div>{displayText || "\u00A0"}</div>;
   }
+
+  // Handle report button click for redirect
+  const handleReportClick = (e) => {
+    if (!user) {
+      // If user is not signed in, prevent default action and redirect to sign-in page
+      e.preventDefault();
+      router.push('/signin'); // Change '/signin' to your actual sign-in route
+    }
+    // If the user is authenticated, they will be allowed to click the link
+  };
+
   return (
     <main className="flex-1 bg-white relative">
       <div
@@ -84,7 +104,8 @@ export default function Hero() {
 
         <div className="flex flex-col sm:flex-row gap-4">
           <Link
-            href="/report"
+            href="/tracking"
+            onClick={handleReportClick}
             className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-8 rounded-md transition-colors text-center"
           >
             Report
