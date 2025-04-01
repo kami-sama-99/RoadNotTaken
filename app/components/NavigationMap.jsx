@@ -28,8 +28,9 @@ const NavigationMap = ({ start, end }) => {
     });
 
     const directionsService = new google.maps.DirectionsService();
-    const directionsRenderer = new google.maps.DirectionsRenderer();
-    directionsRenderer.setMap(map);
+    
+    // Create multiple renderers for different routes
+    const routeRenderers = [];
 
     const calculateAndDisplayRoute = () => {
       directionsService.route(
@@ -37,10 +38,25 @@ const NavigationMap = ({ start, end }) => {
           origin: start,
           destination: end,
           travelMode: google.maps.TravelMode.DRIVING,
+          provideRouteAlternatives: true, // Request multiple routes
         },
         (response, status) => {
           if (status === google.maps.DirectionsStatus.OK) {
-            directionsRenderer.setDirections(response);
+            const limitedRoutes = response.routes.slice(0, 5); // Limit to 5 routes
+
+            limitedRoutes.forEach((route, index) => {
+              const directionsRenderer = new google.maps.DirectionsRenderer({
+                map,
+                directions: response,
+                routeIndex: index, // Display different routes
+                polylineOptions: {
+                  strokeColor: index === 0 ? "#1976D2" : "#FF5722", // Different colors for routes
+                  strokeOpacity: 0.7,
+                  strokeWeight: 5,
+                },
+              });
+              routeRenderers.push(directionsRenderer);
+            });
           } else {
             alert("Directions request failed due to " + status);
           }
@@ -53,10 +69,7 @@ const NavigationMap = ({ start, end }) => {
 
   return (
     <div className="md:col-span-2 mt-4 md:mt-0 rounded-lg shadow-md overflow-hidden h-fit w-full">
-      <div
-        ref={mapRef}
-        style={{ height: "500px", width: "100%" }}
-      ></div>
+      <div ref={mapRef} style={{ height: "500px", width: "100%" }}></div>
     </div>
   );
 };
