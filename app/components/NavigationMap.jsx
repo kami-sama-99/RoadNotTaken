@@ -46,6 +46,9 @@ const NavigationMap = ({ start, end }) => {
     });
 
     const directionsService = new google.maps.DirectionsService();
+    
+    // Create multiple renderers for different routes
+    const routeRenderers = [];
 
     const calculateAndDisplayRoute = () => {
       directionsService.route(
@@ -53,6 +56,7 @@ const NavigationMap = ({ start, end }) => {
           origin: start,
           destination: end,
           travelMode: google.maps.TravelMode.DRIVING,
+          provideRouteAlternatives: true, // Request multiple routes
           provideRouteAlternatives: true, // Request multiple routes
         },
         (response, status) => {
@@ -82,6 +86,21 @@ const NavigationMap = ({ start, end }) => {
               } else {
                 console.error("Polyline data not found for the route.");
               }
+            });
+            const limitedRoutes = response.routes.slice(0, 5); // Limit to 5 routes
+
+            limitedRoutes.forEach((route, index) => {
+              const directionsRenderer = new google.maps.DirectionsRenderer({
+                map,
+                directions: response,
+                routeIndex: index, // Display different routes
+                polylineOptions: {
+                  strokeColor: index === 0 ? "#1976D2" : "#FF5722", // Different colors for routes
+                  strokeOpacity: 0.7,
+                  strokeWeight: 5,
+                },
+              });
+              routeRenderers.push(directionsRenderer);
             });
           } else {
             alert("Directions request failed due to " + status);
