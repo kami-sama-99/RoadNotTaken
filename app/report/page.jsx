@@ -12,7 +12,9 @@ const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY; // Replace with you
 
 export default function LocationTracker() {
   const [tracking, setTracking] = useState(false);
-  const [message, setMessage] = useState("Click on the button to start tracking the route.");
+  const [message, setMessage] = useState(
+    "Click on the button to start tracking the route."
+  );
   const [position, setPosition] = useState(null);
   const watchIdRef = useRef(null);
   const [user, setUser] = useState(null);
@@ -142,37 +144,59 @@ export default function LocationTracker() {
   return (
     <>
       <Header />
-      <div
-        className="h-screen p-4 h-fit flex flex-col md:grid md:grid-cols-3 md:gap-4"
-      >
+      <div className="h-screen p-4 h-fit flex flex-col md:grid md:grid-cols-3 md:gap-4">
         {/* Left Section (Message & Button) */}
-        <div className={"md:col-span-1 text-black bg-gray-100 p-4 rounded-lg shadow-md h-fit"}>
-  <h2 className="text-2xl font-bold mb-6 text-blue-500 md:text-4xl">{message}</h2>
-  
-  {isClient && (
-    <button
-      onClick={tracking ? stopTracking : startTracking}
-      className={`mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-8 rounded-md transition-colors text-center ${
-        tracking ? "bg-red-600 hover:bg-red-700" : "bg-blue-500 hover:bg-blue-700"
-      }`}
-    >
-      {tracking ? "Stop Tracking" : "Start Tracking"}
-    </button>
-  )}
+        <div
+          className={
+            "md:col-span-1 text-black bg-gray-100 p-4 rounded-lg shadow-md h-fit"
+          }
+        >
+          <h2 className="text-2xl font-bold mb-6 text-blue-500 md:text-4xl">
+            {message}
+          </h2>
 
-  {/* Guidelines Section */}
-  <div className="mt-6 p-4 bg-gray-100 text-gray-700 rounded-lg shadow-md w-full max-w-lg">
-    <h3 className="text-lg font-semibold text-gray-900">📌 Guidelines</h3>
-    <ul className="mt-2 text-sm list-disc list-inside">
-      <li><strong>Before Starting:</strong> Ensure your GPS is enabled for accurate tracking.</li>
-      <li><strong>When to Start:</strong> Click "Start Tracking" when a poor road starts.</li>
-      <li><strong>Device Placement:</strong> Keep your device in an open area (e.g., pocket, dashboard) for better GPS reception.</li>
-      <li><strong>When to Stop:</strong> Click "Stop Tracking" when the poor road ends.</li>
-      <li><strong>Network Connection:</strong> Ensure an active internet connection for smooth tracking.</li>
-    </ul>
-  </div>
-</div>
+          {isClient && (
+            <button
+              onClick={tracking ? stopTracking : startTracking}
+              className={`mt-4 w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-8 rounded-md transition-colors text-center ${
+                tracking
+                  ? "bg-red-600 hover:bg-red-700"
+                  : "bg-blue-500 hover:bg-blue-700"
+              }`}
+            >
+              {tracking ? "Stop Tracking" : "Start Tracking"}
+            </button>
+          )}
 
+          {/* Guidelines Section */}
+          <div className="mt-6 p-4 bg-gray-100 text-gray-700 rounded-lg shadow-md w-full max-w-lg">
+            <h3 className="text-lg font-semibold text-gray-900">
+              📌 Guidelines
+            </h3>
+            <ul className="mt-2 text-sm list-disc list-inside">
+              <li>
+                <strong>Before Starting:</strong> Ensure your GPS is enabled for
+                accurate tracking.
+              </li>
+              <li>
+                <strong>When to Start:</strong> Click "Start Tracking" when a
+                poor road starts.
+              </li>
+              <li>
+                <strong>Device Placement:</strong> Keep your device in an open
+                area (e.g., pocket, dashboard) for better GPS reception.
+              </li>
+              <li>
+                <strong>When to Stop:</strong> Click "Stop Tracking" when the
+                poor road ends.
+              </li>
+              <li>
+                <strong>Network Connection:</strong> Ensure an active internet
+                connection for smooth tracking.
+              </li>
+            </ul>
+          </div>
+        </div>
 
         {/* Right Section (Map) */}
         <div className="md:col-span-2 mt-4 md:mt-0 rounded-lg shadow-md overflow-hidden">
