@@ -19,6 +19,7 @@ export default function AuthForm({ mode }) {
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
   const [isMobile, setIsMobile] = useState(false);
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     const handleResize = () => {
