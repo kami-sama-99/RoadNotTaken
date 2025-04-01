@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { createContext, useContext, useState, useEffect } from "react";
 
@@ -12,24 +12,28 @@ export const useGoogleMaps = () => {
 
 export const GoogleMapsProvider = ({ children }) => {
   const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
+  const [googleInstance, setGoogleInstance] = useState(null);
 
   useEffect(() => {
-    if (typeof window !== "undefined" && !window.google) {
-      const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`; // Add your API key here
-      script.async = true;
-      script.onload = () => {
+    if (typeof window !== "undefined") {
+      if (!window.google) {
+        const script = document.createElement("script");
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
+        script.async = true;
+        script.onload = () => {
+          setIsGoogleMapsLoaded(true);
+          setGoogleInstance(window.google); // ✅ Now safe to access window.google
+        };
+        document.head.appendChild(script);
+      } else {
         setIsGoogleMapsLoaded(true);
-      };
-      document.head.appendChild(script);
-    } else {
-      setIsGoogleMapsLoaded(true);
+        setGoogleInstance(window.google);
+      }
     }
   }, []);
 
-  // Provide Google Maps state and related values
   return (
-    <GoogleMapsContext.Provider value={{ isGoogleMapsLoaded, google: window.google }}>
+    <GoogleMapsContext.Provider value={{ isGoogleMapsLoaded, google: googleInstance }}>
       {children}
     </GoogleMapsContext.Provider>
   );

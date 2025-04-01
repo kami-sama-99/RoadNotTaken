@@ -24,7 +24,8 @@ export default function Page() {
   const handleStartChange = (e) => {
     const value = e.target.value;
     setStart(value);
-    if (value.length > 0 && isGoogleMapsLoaded) {
+  
+    if (typeof window !== "undefined" && isGoogleMapsLoaded && value.length > 0) {
       const autocompleteService = new window.google.maps.places.AutocompleteService();
       autocompleteService.getPlacePredictions({ input: value }, (predictions, status) => {
         if (status === window.google.maps.places.PlacesServiceStatus.OK) {
@@ -36,18 +37,17 @@ export default function Page() {
     } else {
       setStartSuggestions([]);
     }
-
-    // Reset the navigation if start location changes after navigating
+  
     if (navigateClicked) {
-      setNavigateClicked(false); // Allow the user to modify destinations after navigating
+      setNavigateClicked(false);
     }
   };
-
-  // Handle end location input change and fetch predictions
+  
   const handleEndChange = (e) => {
     const value = e.target.value;
     setEnd(value);
-    if (value.length > 0 && isGoogleMapsLoaded) {
+  
+    if (typeof window !== "undefined" && isGoogleMapsLoaded && value.length > 0) {
       const autocompleteService = new window.google.maps.places.AutocompleteService();
       autocompleteService.getPlacePredictions({ input: value }, (predictions, status) => {
         if (status === window.google.maps.places.PlacesServiceStatus.OK) {
@@ -59,12 +59,11 @@ export default function Page() {
     } else {
       setEndSuggestions([]);
     }
-
-    // Reset the navigation if end location changes after navigating
+  
     if (navigateClicked) {
-      setNavigateClicked(false); // Allow the user to modify destinations after navigating
+      setNavigateClicked(false);
     }
-  };
+  };  
 
   // Select a suggestion and set it to the corresponding input field
   const handleSelectStart = (suggestion) => {

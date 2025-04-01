@@ -73,16 +73,6 @@ export default function Hero() {
     return <div>{displayText || "\u00A0"}</div>;
   }
 
-  // Handle report button click for redirect
-  const handleReportClick = (e) => {
-    if (!user) {
-      // If user is not signed in, prevent default action and redirect to sign-in page
-      e.preventDefault();
-      router.push('/signin'); // Change '/signin' to your actual sign-in route
-    }
-    // If the user is authenticated, they will be allowed to click the link
-  };
-
   return (
     <main className="flex-1 bg-white relative">
       <div
@@ -104,8 +94,7 @@ export default function Hero() {
 
         <div className="flex flex-col sm:flex-row gap-4">
           <Link
-            href="/tracking"
-            onClick={handleReportClick}
+            href="/report"
             className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-8 rounded-md transition-colors text-center"
           >
             Report
