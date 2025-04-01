@@ -1,39 +1,28 @@
-import { getFirestore, collection, getDocs } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "./firebase";
 
-// Fetch all polycoded routes for every user in the Firestore database
-export const fetchAllRoutesFromFirestore = async () => {
-  const db = getFirestore();
+// Fetch polycoded routes for a specific user from the Firestore database
+export const fetchUserRoutesFromFirestore = async () => {
+  const userUid = "8hE2JqLyCPUqjg1dLEGyMduy3Pl2"; // Hardcoded user UID
 
   try {
-    // Accessing the users collection
-    const usersSnapshot = await getDocs(collection(db, "users"));
-    console.log("Users Snapshot:", usersSnapshot);  // Log the users snapshot to check
+    // Accessing the routes collection for the specific user
+    const routesSnapshot = await getDocs(collection(db, "users", userUid, "routes"));
 
-    if (usersSnapshot.empty) {
-      console.log("No users found in the database.");
-      return [];  // Return an empty array if no users are found
+    if (routesSnapshot.empty) {
+      console.log("No routes found for this user.");
+      return []; // Return an empty array if no routes are found
     }
 
-    // Iterate over all users and fetch their routes
-    const allRoutes = [];
-    
-    for (const userDoc of usersSnapshot.docs) {
-      const userUid = userDoc.id;  // The user's UID is the document ID
-
-      // Fetch the routes for the current user
-      const routesSnapshot = await getDocs(collection(db, "users", userUid, "routes"));
-      console.log(`Routes Snapshot for user ${userUid}:`, routesSnapshot);  // Log the snapshot for each user
-
-      if (!routesSnapshot.empty) {
-        const userRoutes = routesSnapshot.docs.map(doc => doc.data().encodedPolyline);
-        allRoutes.push(...userRoutes);  // Add the routes to the allRoutes array
-      }
-    }
-
-    console.log("Fetched All Routes:", allRoutes);  // Log all fetched routes
-    return allRoutes;  // Return the array of all routes
+    // Extracting all the encodedPolyline values for the user's routes
+    const userRoutes = routesSnapshot.docs.map((doc) => doc.data().encodedPolyline);
+ // Log the fetched routes
+    return userRoutes; // Return the user's routes
   } catch (error) {
-    console.error("Error fetching routes from Firestore:", error);
-    return [];  // Return an empty array in case of an error
+    console.error("Error fetching routes for user:", error);
+    return []; // Return an empty array in case of an error
   }
 };
+
+// Call the function to fetch routes for the hardcoded user
+fetchUserRoutesFromFirestore();

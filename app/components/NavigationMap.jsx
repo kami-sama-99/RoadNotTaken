@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { decodePolyline } from "@/utils/polyline";
 import { calculateOverlapLength, calculateRouteScore, renderRoutes } from "@/utils/mapUtils";
-import { fetchAllRoutesFromFirestore } from "@/firebase/routes";
+import { fetchUserRoutesFromFirestore } from "@/firebase/routes";
 
 const NavigationMap = ({ start, end }) => {
   const mapRef = useRef(null);
@@ -22,15 +22,21 @@ const NavigationMap = ({ start, end }) => {
     }
   }, []);
 
+  // Fetch Firestore routes when Google Maps is loaded and parameters are available
   useEffect(() => {
     if (isGoogleMapsLoaded && start && end) {
       // Fetch the polycoded routes from Firestore
-      fetchAllRoutesFromFirestore().then((routes) => {
-        setFirestoreRoutes(routes.map(decodePolyline));
+      fetchUserRoutesFromFirestore().then((routes) => {
+        if (routes && routes.length > 0) {
+          setFirestoreRoutes(routes.map(decodePolyline));
+        } else {
+          console.log("No routes found in Firestore.");
+        }
       });
     }
   }, [isGoogleMapsLoaded, start, end]);
 
+  // Ensure all parameters are loaded before proceeding with the map
   useEffect(() => {
     if (!isGoogleMapsLoaded || !start || !end || firestoreRoutes.length === 0) return;
 
@@ -40,7 +46,7 @@ const NavigationMap = ({ start, end }) => {
     });
 
     const directionsService = new google.maps.DirectionsService();
-    
+
     const calculateAndDisplayRoute = () => {
       directionsService.route(
         {
@@ -52,19 +58,30 @@ const NavigationMap = ({ start, end }) => {
         (response, status) => {
           if (status === google.maps.DirectionsStatus.OK) {
             const limitedRoutes = response.routes.slice(0, 5); // Limit to 5 routes
-
-            limitedRoutes.forEach((route, index) => {
-              // Decode the Google Maps polyline
-              const googleRoute = decodePolyline(route.overview_polyline.points);
-
-              // Check overlap with Firestore routes
-              firestoreRoutes.forEach((firestoreRoute) => {
-                const overlapLength = calculateOverlapLength(googleRoute, firestoreRoute);
-                const routeScore = calculateRouteScore(route, overlapLength, route.legs[0].duration);
-
-                // Render the best route on the map
-                renderRoutes(map, response, googleRoute, routeScore);
-              });
+    
+            limitedRoutes.forEach((route) => {
+              // Check if polyline points exist in the first step of the route
+              if (route.legs && route.legs[0].steps && route.legs[0].steps[0].polyline) {
+                const polylinePoints = route.legs[0].steps[0].polyline.points;
+    
+                if (polylinePoints) {
+                  // Decode the Google Maps polyline
+                  const decodedRoute = decodePolyline(polylinePoints);
+    
+                  // Check overlap with Firestore routes and calculate route score
+                  firestoreRoutes.forEach((firestoreRoute) => {
+                    const overlapLength = calculateOverlapLength(decodedRoute, firestoreRoute);
+                    const routeScore = calculateRouteScore(route, overlapLength, route.legs[0].duration);
+    
+                    // Render the best route on the map
+                    renderRoutes(map, response, decodedRoute, routeScore);
+                  });
+                } else {
+                  console.error("Polyline points are missing.");
+                }
+              } else {
+                console.error("Polyline data not found for the route.");
+              }
             });
           } else {
             alert("Directions request failed due to " + status);
@@ -72,6 +89,7 @@ const NavigationMap = ({ start, end }) => {
         }
       );
     };
+    
 
     calculateAndDisplayRoute();
   }, [isGoogleMapsLoaded, start, end, firestoreRoutes]);
