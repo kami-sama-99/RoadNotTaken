@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import AuthForm from "../components/AuthForm";
+import Carousel from "../components/Carousel";
 
 export default function Page({ params }) {
   const [mode, setMode] = useState(null);
@@ -43,11 +44,7 @@ export default function Page({ params }) {
         </div>
 
         <div className="hidden lg:block h-full w-full rounded-[2rem] border border-gray-300">
-          <img
-            src="/SignInImage.jpg"
-            alt="description of image"
-            className="w-full h-full object-cover rounded-[2rem]"
-          />
+          <Carousel/>
         </div>
       </div>
     </div>
