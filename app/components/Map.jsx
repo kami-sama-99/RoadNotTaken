@@ -17,7 +17,6 @@ const navigationMapStyles = [
 ];
 
 const MapComponent = ({ searchLocation }) => {
-    console.log(searchLocation)
   const { isGoogleMapsLoaded } = useGoogleMaps(); // Get state from context
   const [polylines, setPolylines] = useState([]);
   const [center, setCenter] = useState({
@@ -64,7 +63,6 @@ const MapComponent = ({ searchLocation }) => {
             if (coordinates instanceof GeoPoint) {
               const latitude = coordinates.latitude;
               const longitude = coordinates.longitude;
-              console.log("Coordinates are " + latitude + longitude)
               return { lat: latitude, lng: longitude };
             }
 
@@ -77,7 +75,6 @@ const MapComponent = ({ searchLocation }) => {
         }
 
         setPolylines(allPolylines);
-        console.log(allPolylines);
       } catch (error) {
         console.error("Error fetching reported roads:", error);
       }
@@ -107,14 +104,15 @@ const MapComponent = ({ searchLocation }) => {
         styles: navigationMapStyles,
       }}
     >
+      {/* Render all the fetched polylines from Firestore */}
       {polylines.map((path, index) => (
         <Polyline
           key={index}
           path={path}
           options={{
-            strokeColor: "#FF0000", // Red color for poor roads
+            strokeColor: "#FF0000", // Red color for reported poor roads
             strokeOpacity: 0.8,
-            strokeWeight: 50, // Make the line extremely thick
+            strokeWeight: 5, // Adjust thickness if needed
           }}
         />
       ))}

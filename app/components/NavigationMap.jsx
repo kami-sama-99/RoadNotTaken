@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { decodePolyline } from "@/utils/polyline";
+import { decodePolyline, calculateOverlap } from "@/utils/polyline";
 import { fetchAllRoutesFromFirestore } from "@/firebase/routes";
 
 const NavigationMap = ({ start, end }) => {
   const mapRef = useRef(null);
   const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
   const [firestoreRoutes, setFirestoreRoutes] = useState([]);
+  const [bestRouteIndex, setBestRouteIndex] = useState(null);
 
   // Load Google Maps script dynamically
   useEffect(() => {
@@ -45,8 +46,6 @@ const NavigationMap = ({ start, end }) => {
     });
 
     const directionsService = new google.maps.DirectionsService();
-
-    // Create multiple renderers for different routes
     const routeRenderers = [];
 
     const calculateAndDisplayRoute = () => {
@@ -60,14 +59,34 @@ const NavigationMap = ({ start, end }) => {
         (response, status) => {
           if (status === google.maps.DirectionsStatus.OK) {
             const limitedRoutes = response.routes.slice(0, 5); // Limit to 5 routes
+            let bestScore = Infinity;
+            let optimalIndex = null;
 
             limitedRoutes.forEach((route, index) => {
+              const decodedRoute = decodePolyline(route.overview_polyline);
+              let totalOverlap = 0;
+              
+              firestoreRoutes.forEach((firestoreRoute) => {
+                totalOverlap += calculateOverlap(decodedRoute, firestoreRoute);
+              });
+
+              const score = route.legs[0].duration.value + totalOverlap * 10; // Weighting factor for overlap
+              if (score < bestScore) {
+                bestScore = score;
+                optimalIndex = index;
+              }
+            });
+
+            setBestRouteIndex(optimalIndex);
+
+            limitedRoutes.forEach((route, index) => {
+              const isBest = index === optimalIndex;
               const directionsRenderer = new google.maps.DirectionsRenderer({
                 map,
                 directions: response,
                 routeIndex: index, // Display different routes
                 polylineOptions: {
-                  strokeColor: "#FFEB3B", // Different colors for routes
+                  strokeColor: isBest ? "#000000" : "#FFEB3B", // Black for best route
                   strokeOpacity: 0.7,
                   strokeWeight: 5,
                 },
@@ -80,7 +99,7 @@ const NavigationMap = ({ start, end }) => {
               const polyline = new google.maps.Polyline({
                 path: firestoreRoute,
                 geodesic: true,
-                strokeColor: "#F44336", // Green color for Firestore routes
+                strokeColor: "#F44336", // Red color for Firestore routes
                 strokeOpacity: 0.7,
                 strokeWeight: 5,
               });
