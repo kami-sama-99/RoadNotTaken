@@ -18,9 +18,6 @@ export const fetchAllRoutesFromFirestore = async () => {
       // Add the route to the array
       allRoutes.push(encodedPolyline);
     });
-
-    // Log the fetched routes for all users
-    console.log("Fetched routes for all users:", allRoutes);
     return allRoutes; // Return the routes array for further processing or use
   } catch (error) {
     console.error("Error fetching routes for all users:", error);

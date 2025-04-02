@@ -7,8 +7,9 @@ const NavigationMap = ({ start, end }) => {
   const [isGoogleMapsLoaded, setIsGoogleMapsLoaded] = useState(false);
   const [firestoreRoutes, setFirestoreRoutes] = useState([]);
   const [bestRouteIndex, setBestRouteIndex] = useState(null);
+  const [firestorePolylines, setFirestorePolylines] = useState([]);
+  const [routeRenderers, setRouteRenderers] = useState([]);
 
-  // Load Google Maps script dynamically
   useEffect(() => {
     if (typeof window !== "undefined" && !window.google) {
       const script = document.createElement("script");
@@ -22,10 +23,8 @@ const NavigationMap = ({ start, end }) => {
     }
   }, []);
 
-  // Fetch Firestore routes when Google Maps is loaded and parameters are available
   useEffect(() => {
     if (isGoogleMapsLoaded && start && end) {
-      // Fetch the polycoded routes from Firestore
       fetchAllRoutesFromFirestore().then((routes) => {
         if (routes && routes.length > 0) {
           setFirestoreRoutes(routes.map(decodePolyline));
@@ -36,83 +35,81 @@ const NavigationMap = ({ start, end }) => {
     }
   }, [isGoogleMapsLoaded, start, end]);
 
-  // Ensure all parameters are loaded before proceeding with the map
   useEffect(() => {
     if (!isGoogleMapsLoaded || !start || !end || firestoreRoutes.length === 0) return;
 
     const map = new google.maps.Map(mapRef.current, {
       zoom: 14,
-      center: { lat: 40.7128, lng: -74.0060 }, // Default to New York if no start point
+      center: { lat: 40.7128, lng: -74.0060 },
     });
 
     const directionsService = new google.maps.DirectionsService();
-    const routeRenderers = [];
+    const newRouteRenderers = [];
 
-    const calculateAndDisplayRoute = () => {
-      directionsService.route(
-        {
-          origin: start,
-          destination: end,
-          travelMode: google.maps.TravelMode.DRIVING,
-          provideRouteAlternatives: true, // Request multiple routes
-        },
-        (response, status) => {
-          if (status === google.maps.DirectionsStatus.OK) {
-            const limitedRoutes = response.routes.slice(0, 5); // Limit to 5 routes
-            let bestScore = Infinity;
-            let optimalIndex = null;
+    directionsService.route(
+      {
+        origin: start,
+        destination: end,
+        travelMode: google.maps.TravelMode.DRIVING,
+        provideRouteAlternatives: true,
+      },
+      (response, status) => {
+        if (status === google.maps.DirectionsStatus.OK) {
+          const limitedRoutes = response.routes.slice(0, 10);
+          let bestScore = Infinity;
+          let optimalIndex = null;
 
-            limitedRoutes.forEach((route, index) => {
-              const decodedRoute = decodePolyline(route.overview_polyline);
-              let totalOverlap = 0;
-              
-              firestoreRoutes.forEach((firestoreRoute) => {
-                totalOverlap += calculateOverlap(decodedRoute, firestoreRoute);
-              });
-
-              const score = route.legs[0].duration.value + totalOverlap * 10; // Weighting factor for overlap
-              if (score < bestScore) {
-                bestScore = score;
-                optimalIndex = index;
-              }
+          limitedRoutes.forEach((route, index) => {
+            const decodedRoute = decodePolyline(route.overview_polyline);
+            let totalOverlap = 0;
+            
+            firestoreRoutes.forEach((firestoreRoute) => {
+              totalOverlap += calculateOverlap(decodedRoute, firestoreRoute);
             });
 
-            setBestRouteIndex(optimalIndex);
+            const score = route.legs[0].duration.value + totalOverlap * 10;
+            console.log("Route score: " + score);
+            if (score < bestScore) {
+              bestScore = score;
+              optimalIndex = index;
+            }
+          });
 
-            limitedRoutes.forEach((route, index) => {
-              const isBest = index === optimalIndex;
-              const directionsRenderer = new google.maps.DirectionsRenderer({
-                map,
-                directions: response,
-                routeIndex: index, // Display different routes
-                polylineOptions: {
-                  strokeColor: isBest ? "#000000" : "#FFEB3B", // Black for best route
-                  strokeOpacity: 0.7,
-                  strokeWeight: 5,
-                },
-              });
-              routeRenderers.push(directionsRenderer);
-            });
+          setBestRouteIndex(optimalIndex);
 
-            // Render Firestore routes as polylines on the map
-            firestoreRoutes.forEach((firestoreRoute, index) => {
-              const polyline = new google.maps.Polyline({
-                path: firestoreRoute,
-                geodesic: true,
-                strokeColor: "#F44336", // Red color for Firestore routes
+          limitedRoutes.forEach((route, index) => {
+            const isBest = index === optimalIndex;
+            const directionsRenderer = new google.maps.DirectionsRenderer({
+              map,
+              directions: response,
+              routeIndex: index,
+              polylineOptions: {
+                strokeColor: isBest ? "#000000" : "#FFEB3B",
                 strokeOpacity: 0.7,
                 strokeWeight: 5,
-              });
-              polyline.setMap(map);
+              },
             });
-          } else {
-            alert("Directions request failed due to " + status);
-          }
-        }
-      );
-    };
+            newRouteRenderers.push(directionsRenderer);
+          });
 
-    calculateAndDisplayRoute();
+          const polylines = firestoreRoutes.map((firestoreRoute) => {
+            const polyline = new google.maps.Polyline({
+              path: firestoreRoute,
+              geodesic: true,
+              strokeColor: "#F44336",
+              strokeOpacity: 0.7,
+              strokeWeight: 5,
+            });
+            polyline.setMap(map);
+            return polyline;
+          });
+          setFirestorePolylines(polylines);
+          setRouteRenderers(newRouteRenderers);
+        } else {
+          alert("Directions request failed due to " + status);
+        }
+      }
+    );
   }, [isGoogleMapsLoaded, start, end, firestoreRoutes]);
 
   return (

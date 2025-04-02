@@ -63,7 +63,6 @@ export default function Header() {
         { name: "Home", href: "/" },
         { name: "Report", href: "/report" },
         { name: "Navigate", href: "navigate" },
-        { name: "View map", href: "/map" },
       ]
     : [{ name: "Sign in", href: "/signin" }];
 
