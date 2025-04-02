@@ -24,46 +24,62 @@ export default function Page() {
   const handleStartChange = (e) => {
     const value = e.target.value;
     setStart(value);
-  
-    if (typeof window !== "undefined" && isGoogleMapsLoaded && value.length > 0) {
-      const autocompleteService = new window.google.maps.places.AutocompleteService();
-      autocompleteService.getPlacePredictions({ input: value }, (predictions, status) => {
-        if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-          setStartSuggestions(predictions);
-        } else {
-          setStartSuggestions([]);
+
+    if (
+      typeof window !== "undefined" &&
+      isGoogleMapsLoaded &&
+      value.length > 0
+    ) {
+      const autocompleteService =
+        new window.google.maps.places.AutocompleteService();
+      autocompleteService.getPlacePredictions(
+        { input: value },
+        (predictions, status) => {
+          if (status === window.google.maps.places.PlacesServiceStatus.OK) {
+            setStartSuggestions(predictions);
+          } else {
+            setStartSuggestions([]);
+          }
         }
-      });
+      );
     } else {
       setStartSuggestions([]);
     }
-  
+
     if (navigateClicked) {
       setNavigateClicked(false);
     }
   };
-  
+
   const handleEndChange = (e) => {
     const value = e.target.value;
     setEnd(value);
-  
-    if (typeof window !== "undefined" && isGoogleMapsLoaded && value.length > 0) {
-      const autocompleteService = new window.google.maps.places.AutocompleteService();
-      autocompleteService.getPlacePredictions({ input: value }, (predictions, status) => {
-        if (status === window.google.maps.places.PlacesServiceStatus.OK) {
-          setEndSuggestions(predictions);
-        } else {
-          setEndSuggestions([]);
+
+    if (
+      typeof window !== "undefined" &&
+      isGoogleMapsLoaded &&
+      value.length > 0
+    ) {
+      const autocompleteService =
+        new window.google.maps.places.AutocompleteService();
+      autocompleteService.getPlacePredictions(
+        { input: value },
+        (predictions, status) => {
+          if (status === window.google.maps.places.PlacesServiceStatus.OK) {
+            setEndSuggestions(predictions);
+          } else {
+            setEndSuggestions([]);
+          }
         }
-      });
+      );
     } else {
       setEndSuggestions([]);
     }
-  
+
     if (navigateClicked) {
       setNavigateClicked(false);
     }
-  };  
+  };
 
   // Select a suggestion and set it to the corresponding input field
   const handleSelectStart = (suggestion) => {
@@ -98,7 +114,9 @@ export default function Page() {
       <Header />
       <div className="h-screen p-4 flex flex-col md:grid md:grid-cols-3 md:gap-4 text-black">
         <div className="md:col-span-1 text-black bg-gray-100 p-4 rounded-lg shadow-md h-fit">
-          <h2 className="text-xl text-black font-bold mb-4">Enter Navigation Details</h2>
+          <h2 className="text-xl text-black font-bold mb-4">
+            Enter Navigation Details
+          </h2>
 
           <div className="relative">
             <input
@@ -150,10 +168,26 @@ export default function Page() {
                 ))}
               </ul>
             )}
+            <div className="mt-4 p-2 bg-gray-100 rounded-md text-sm">
+              <p>
+                <span className="inline-block w-4 h-4 bg-black mr-2"></span>Best
+                Route
+              </p>
+              <p>
+                <span className="inline-block w-4 h-4 bg-yellow-400 mr-2"></span>
+                Alternative Routes
+              </p>
+              <p>
+                <span className="inline-block w-4 h-4 bg-red-500 mr-2"></span>
+                Poor Road Conditions
+              </p>
+            </div>
           </div>
 
           {/* Display error message if there is one */}
-          {errorMessage && <div className="text-red-500 mt-2">{errorMessage}</div>}
+          {errorMessage && (
+            <div className="text-red-500 mt-2">{errorMessage}</div>
+          )}
 
           {/* Navigate button */}
           <button
@@ -165,7 +199,9 @@ export default function Page() {
         </div>
 
         {/* Render NavigationMap only after clicking "Navigate" and if no error */}
-        {navigateClicked && !errorMessage && <NavigationMap start={start} end={end}/>}
+        {navigateClicked && !errorMessage && (
+          <NavigationMap start={start} end={end} />
+        )}
       </div>
     </>
   );

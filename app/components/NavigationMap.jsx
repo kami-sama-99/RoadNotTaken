@@ -9,6 +9,8 @@ const NavigationMap = ({ start, end }) => {
   const [bestRouteIndex, setBestRouteIndex] = useState(null);
   const [firestorePolylines, setFirestorePolylines] = useState([]);
   const [routeRenderers, setRouteRenderers] = useState([]);
+  const [bestRoute, setBestRoute] = useState(null);
+  const [fastestRoute, setFastestRoute] = useState(null);
 
   useEffect(() => {
     if (typeof window !== "undefined" && !window.google) {
@@ -58,6 +60,9 @@ const NavigationMap = ({ start, end }) => {
           const limitedRoutes = response.routes.slice(0, 10);
           let bestScore = Infinity;
           let optimalIndex = null;
+          let optimalRoute = null;
+
+          setFastestRoute(decodePolyline(limitedRoutes[0].overview_polyline));
 
           limitedRoutes.forEach((route, index) => {
             const decodedRoute = decodePolyline(route.overview_polyline);
@@ -68,14 +73,16 @@ const NavigationMap = ({ start, end }) => {
             });
 
             const score = route.legs[0].duration.value + totalOverlap * 10;
-            console.log("Route score: " + score);
+            console.log("Route: " + score);
             if (score < bestScore) {
               bestScore = score;
               optimalIndex = index;
+              optimalRoute = decodedRoute;
             }
           });
 
           setBestRouteIndex(optimalIndex);
+          setBestRoute(optimalRoute);
 
           limitedRoutes.forEach((route, index) => {
             const isBest = index === optimalIndex;
@@ -112,9 +119,30 @@ const NavigationMap = ({ start, end }) => {
     );
   }, [isGoogleMapsLoaded, start, end, firestoreRoutes]);
 
+  const handleRedirect = () => {
+    if (!bestRoute || !fastestRoute || bestRoute.length < 2 || fastestRoute.length < 2) {
+      alert("No optimal route found.");
+      return;
+    }
+
+    const waypoints = bestRoute.filter(({ lat, lng }) =>
+      !fastestRoute.some((point) => point.lat === lat && point.lng === lng)
+    );
+
+    const waypointString = waypoints.slice(0, 3).map(({ lat, lng }) => `${lat},${lng}`).join("/");
+    const googleMapsUrl = `https://www.google.com/maps/dir/${start}/${waypointString}/${end}`;
+    window.open(googleMapsUrl, "_blank");
+  };
+
   return (
     <div className="md:col-span-2 mt-4 md:mt-0 rounded-lg shadow-md overflow-hidden h-fit w-full">
       <div ref={mapRef} style={{ height: "500px", width: "100%" }}></div>
+      <button 
+        onClick={handleRedirect} 
+        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+      >
+        Navigate with Google Maps
+      </button>
     </div>
   );
 };
