@@ -1,39 +1,29 @@
-import { getFirestore, collection, getDocs } from "firebase/firestore";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "./firebase";
 
-// Fetch all polycoded routes for every user in the Firestore database
+// Fetch all polycoded routes from the Firestore database
 export const fetchAllRoutesFromFirestore = async () => {
-  const db = getFirestore();
-
   try {
-    // Accessing the users collection
-    const usersSnapshot = await getDocs(collection(db, "users"));
-    console.log("Users Snapshot:", usersSnapshot);  // Log the users snapshot to check
+    let allRoutes = [];
 
-    if (usersSnapshot.empty) {
-      console.log("No users found in the database.");
-      return [];  // Return an empty array if no users are found
-    }
+    // Query the 'routes' collection to get all route documents
+    const routesSnapshot = await getDocs(collection(db, "routes"));
 
-    // Iterate over all users and fetch their routes
-    const allRoutes = [];
-    
-    for (const userDoc of usersSnapshot.docs) {
-      const userUid = userDoc.id;  // The user's UID is the document ID
+    // Loop through each route document
+    routesSnapshot.forEach((doc) => {
+      // Extract the encodedPolyline values for each route
+      const routeData = doc.data();
+      const encodedPolyline = routeData.encodedPolyline;
 
-      // Fetch the routes for the current user
-      const routesSnapshot = await getDocs(collection(db, "users", userUid, "routes"));
-      console.log(`Routes Snapshot for user ${userUid}:`, routesSnapshot);  // Log the snapshot for each user
+      // Add the route to the array
+      allRoutes.push(encodedPolyline);
+    });
 
-      if (!routesSnapshot.empty) {
-        const userRoutes = routesSnapshot.docs.map(doc => doc.data().encodedPolyline);
-        allRoutes.push(...userRoutes);  // Add the routes to the allRoutes array
-      }
-    }
-
-    console.log("Fetched All Routes:", allRoutes);  // Log all fetched routes
-    return allRoutes;  // Return the array of all routes
+    // Log the fetched routes for all users
+    console.log("Fetched routes for all users:", allRoutes);
+    return allRoutes; // Return the routes array for further processing or use
   } catch (error) {
-    console.error("Error fetching routes from Firestore:", error);
-    return [];  // Return an empty array in case of an error
+    console.error("Error fetching routes for all users:", error);
+    return []; // Return an empty array in case of an error
   }
 };

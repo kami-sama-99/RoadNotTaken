@@ -84,13 +84,15 @@ export default function LocationTracker() {
     }
 
     try {
-      await addDoc(collection(db, "users", user.uid, "routes"), {
+      // Save the route directly to the 'routes' collection
+      await addDoc(collection(db, "routes"), {
         encodedPolyline: google.maps.geometry.encoding.encodePath(path),
+        userId: user.uid, // Store the user's UID to link the route to the user
         timestamp: new Date().toISOString(),
       });
 
       setMessage("Route saved successfully!");
-      setPath([]);
+      setPath([]); // Reset the path after saving the route
     } catch (error) {
       setMessage(`Error saving route: ${error.message}`);
     }
