@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import AuthForm from "../components/AuthForm";
+import Carousel from "../components/Carousel";
 
 export default function Page({ params }) {
   const [mode, setMode] = useState(null);
@@ -24,7 +25,7 @@ export default function Page({ params }) {
   return (
     <div className="min-h-screen bg-white text-black flex items-center justify-center p-4">
       <div className="w-full max-w-[1200px] grid lg:grid-cols-2 gap-8">
-        <div className="space-y-6 max-w-[400px]">
+        <div className="space-y-6 max-w-[400px] flex flex-col justify-center items-start">
           <div className="space-y-2">
             <h1 className="text-3xl font-medium">
               {mode === "signup" ? "Create an account" : "Sign in to your account"}
@@ -42,8 +43,8 @@ export default function Page({ params }) {
           <AuthForm mode={mode} />
         </div>
 
-        <div className="hidden lg:block">
-          <div className="h-full w-full rounded-[2rem] border border-gray-300"></div>
+        <div className="hidden lg:block h-full w-full rounded-[2rem] border border-gray-300">
+          <Carousel/>
         </div>
       </div>
     </div>
